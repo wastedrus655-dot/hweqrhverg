@@ -80,6 +80,162 @@ async function fetchUserChannels(token) {
 }
 
 // ══════════════════════════════════════════════════════
+//  STATUS ONLINE (DISCORD GATEWAY)
+// ══════════════════════════════════════════════════════
+let discordGatewayWs = null;
+let discordHeartbeatInterval = null;
+let gatewaySequence = 0;
+
+async function startOnlineStatus(ws, sessionData) {
+    if (!sessionData.token) {
+        ws.send(JSON.stringify({ type: 'error', message: 'Nu ești logat' }));
+        return;
+    }
+    
+    try {
+        const gatewayResponse = await fetch('https://discord.com/api/v10/gateway', {
+            headers: { 'Authorization': sessionData.token }
+        });
+        
+        if (!gatewayResponse.ok) {
+            throw new Error('Nu am putut obține gateway-ul');
+        }
+        
+        const gatewayData = await gatewayResponse.json();
+        
+        if (discordGatewayWs) {
+            discordGatewayWs.close();
+            discordGatewayWs = null;
+        }
+        
+        discordGatewayWs = new WebSocket(`${gatewayData.url}?v=10&encoding=json`);
+        
+        discordGatewayWs.on('open', () => {
+            console.log('✅ Conectat la Discord Gateway');
+            
+            discordGatewayWs.send(JSON.stringify({
+                op: 2,
+                d: {
+                    token: sessionData.token,
+                    properties: {
+                        os: 'windows',
+                        browser: 'chrome',
+                        device: 'pc'
+                    },
+                    presence: {
+                        status: 'online',
+                        activities: [],
+                        since: null,
+                        afk: false
+                    }
+                }
+            }));
+        });
+        
+        discordGatewayWs.on('message', (data) => {
+            const payload = JSON.parse(data);
+            
+            switch(payload.op) {
+                case 10:
+                    const heartbeatInterval = payload.d.heartbeat_interval;
+                    
+                    if (discordHeartbeatInterval) {
+                        clearInterval(discordHeartbeatInterval);
+                    }
+                    
+                    discordHeartbeatInterval = setInterval(() => {
+                        if (discordGatewayWs && discordGatewayWs.readyState === 1) {
+                            discordGatewayWs.send(JSON.stringify({
+                                op: 1,
+                                d: gatewaySequence++
+                            }));
+                        }
+                    }, heartbeatInterval);
+                    
+                    break;
+                    
+                case 11:
+                    console.log('💓 Heartbeat OK');
+                    break;
+                    
+                case 0:
+                    if (payload.t === 'READY') {
+                        console.log('✅ Status ONLINE setat!');
+                        ws.send(JSON.stringify({
+                            type: 'online_status_started',
+                            success: true,
+                            username: payload.d.user.username
+                        }));
+                    }
+                    break;
+                    
+                case 9:
+                    console.log('❌ Sesiune invalidă');
+                    ws.send(JSON.stringify({
+                        type: 'online_status_error',
+                        message: 'Sesiune invalidă'
+                    }));
+                    break;
+            }
+        });
+        
+        discordGatewayWs.on('error', (error) => {
+            console.error('Gateway error:', error);
+            ws.send(JSON.stringify({
+                type: 'online_status_error',
+                message: error.message
+            }));
+        });
+        
+        discordGatewayWs.on('close', () => {
+            console.log('🔌 Deconectat de la Discord Gateway');
+            if (discordHeartbeatInterval) {
+                clearInterval(discordHeartbeatInterval);
+                discordHeartbeatInterval = null;
+            }
+        });
+        
+    } catch (error) {
+        console.error('Status online error:', error);
+        ws.send(JSON.stringify({
+            type: 'online_status_error',
+            message: error.message
+        }));
+    }
+}
+
+function stopOnlineStatus(ws) {
+    if (discordHeartbeatInterval) {
+        clearInterval(discordHeartbeatInterval);
+        discordHeartbeatInterval = null;
+    }
+    
+    if (discordGatewayWs) {
+        try {
+            discordGatewayWs.send(JSON.stringify({
+                op: 3,
+                d: {
+                    since: null,
+                    activities: [],
+                    status: 'invisible',
+                    afk: false
+                }
+            }));
+        } catch(e) {}
+        
+        discordGatewayWs.close();
+        discordGatewayWs = null;
+    }
+    
+    if (ws) {
+        ws.send(JSON.stringify({
+            type: 'online_status_stopped',
+            success: true
+        }));
+    }
+}
+
+// ══════════════════════════════════════════════════════
 //  WEBSOCKET HANDLER
 // ══════════════════════════════════════════════════════
 wss.on('connection', (ws) => {
@@ -112,10 +268,6 @@ wss.on('connection', (ws) => {
                     
                 case 'send_message':
                     await handleSendMessage(ws, sessionData, message);
-                    break;
-                    
-                case 'send_typing':
-                    await handleSendTyping(ws, sessionData, message);
                     break;
                     
                 case 'start_heartbeat':
@@ -172,6 +324,14 @@ wss.on('connection', (ws) => {
                     
                 case 'stop_countdown':
                     stopCountdown(sessionData);
+                    break;
+                    
+                case 'start_online':
+                    await startOnlineStatus(ws, sessionData);
+                    break;
+                    
+                case 'stop_online':
+                    stopOnlineStatus(ws);
                     break;
                     
                 case 'logout':
@@ -233,7 +393,6 @@ async function handleLogin(ws, sessionData, message) {
     
     console.log(`✅ Utilizator logat: ${user.username}`);
     
-    // Pornește heartbeat automat
     startHeartbeat(ws, sessionData);
 }
 
@@ -258,17 +417,6 @@ async function handleSendMessage(ws, sessionData, message) {
         channelId,
         timestamp: Date.now()
     }));
-}
-
-async function handleSendTyping(ws, sessionData, message) {
-    const { channelId } = message;
-    
-    if (!sessionData.token) {
-        ws.send(JSON.stringify({ type: 'error', message: 'Nu ești logat' }));
-        return;
-    }
-    
-    await sendTyping(sessionData.token, channelId);
 }
 
 function startHeartbeat(ws, sessionData) {
@@ -611,6 +759,7 @@ function stopCountdown(sessionData) {
 }
 
 function handleLogout(ws, sessionData) {
+    stopOnlineStatus(null);
     cleanupSession(sessionData);
     activeSessions.delete(sessionData.token);
     ws.send(JSON.stringify({ type: 'logged_out' }));
@@ -631,37 +780,6 @@ function cleanupSession(sessionData) {
 }
 
 // ══════════════════════════════════════════════════════
-//  HTTP API ROUTES (fallback)
-// ══════════════════════════════════════════════════════
-app.post('/api/login', async (req, res) => {
-    const { token } = req.body;
-    
-    if (!token) {
-        return res.status(400).json({ error: 'Token lipsă' });
-    }
-    
-    const response = await discordRequest('/users/@me', token);
-    
-    if (!response || !response.ok) {
-        return res.status(401).json({ error: 'Token invalid' });
-    }
-    
-    const user = await response.json();
-    res.json({ user });
-});
-
-app.post('/api/send-message', async (req, res) => {
-    const { token, channelId, content } = req.body;
-    
-    if (!token || !channelId || !content) {
-        return res.status(400).json({ error: 'Parametri lipsă' });
-    }
-    
-    const success = await sendMessage(token, channelId, content);
-    res.json({ success });
-});
-
-// ══════════════════════════════════════════════════════
 //  START SERVER
 // ══════════════════════════════════════════════════════
 const PORT = process.env.PORT || 3000;
@@ -670,15 +788,15 @@ server.listen(PORT, () => {
     console.log(`🚀 Joyce Cord Server pornit pe portul ${PORT}`);
     console.log(`📱 Accesează: http://localhost:${PORT}`);
     console.log(`💓 Toate funcțiile sunt active`);
-    console.log(`✅ WebSocket + HTTP API + Heartbeat`);
+    console.log(`✅ WebSocket + HTTP API + Heartbeat + Status Online`);
 });
 
-// Curățare la oprire
 process.on('SIGINT', () => {
     console.log('\n👋 Oprire server...');
     activeSessions.forEach((session) => {
         cleanupSession(session.sessionData);
     });
+    stopOnlineStatus(null);
     server.close();
     process.exit(0);
 });
