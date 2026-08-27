@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Joyce Cord - 24/7</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',sans-serif;min-height:100vh;padding:20px}
+.container{max-width:600px;margin:0 auto}
+.card{background:#151520;border:1px solid #2a2a3a;border-radius:12px;padding:20px;margin-bottom:15px}
+h1{color:#c0392b;text-align:center;margin-bottom:20px;font-size:28px}
+h3{color:#e0e0e0;margin-bottom:15px}
+input,textarea{width:100%;padding:12px;background:#1a1a2a;border:1px solid #2a2a3a;border-radius:8px;color:#fff;margin-bottom:10px;font-size:14px}
+button{width:100%;padding:12px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;margin-bottom:10px;transition:all 0.3s}
+button:hover{background:#a93226}
+button:disabled{opacity:0.5;cursor:not-allowed}
+button.stop{background:#e74c3c}
+button.start{background:#27ae60}
+.status{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+.status.online{background:#27ae60}
+.status.offline{background:#e74c3c}
+.status.working{background:#f39c12;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.log{background:#0a0a0f;border:1px solid #2a2a3a;border-radius:8px;padding:10px;height:300px;overflow-y:auto;font-size:12px;font-family:monospace}
+.log-entry{margin-bottom:5px;padding:5px;border-left:3px solid #c0392b;background:#1a1a2a}
+.info{color:#4a90d9}
+.success-text{color:#27ae60}
+.error-text{color:#e74c3c}
+.flex{display:flex;gap:10px;align-items:center}
+.flex-1{flex:1}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🔴 JOYCE CORD 24/7</h1>
+    
+    <div class="card" id="loginCard">
+        <h3>Login</h3>
+        <input type="password" id="tokenInput" placeholder="Discord Token">
+        <button onclick="login()">Conectează-te</button>
+    </div>
+    
+    <div class="card" id="controlCard" style="display:none">
+        <div class="flex" style="margin-bottom:15px">
+            <span class="status" id="connectionStatus"></span>
+            <span id="usernameDisplay" class="flex-1">Conectat</span>
+            <button onclick="logout()" style="width:auto;padding:8px 15px;margin:0">Logout</button>
+        </div>
+        
+        <h3>Trimite Mesaj</h3>
+        <input type="text" id="channelInput" placeholder="Channel ID">
+        <textarea id="messageInput" placeholder="Mesajul tău..." rows="3"></textarea>
+        <button onclick="sendMessage()">Trimite</button>
+        
+        <h3>Funcții 24/7</h3>
+        <button onclick="toggleHeartbeat()" id="heartbeatBtn" class="start">Start Heartbeat</button>
+        
+        <h4>Anti-AFK</h4>
+        <input type="text" id="afkChannel" placeholder="Channel ID pentru AFK">
+        <input type="text" id="afkResponse" placeholder="Răspuns AFK (ex: here)" value="here">
+        <button onclick="toggleAfk()" id="afkBtn" class="start">Start Anti-AFK</button>
+        
+        <h4>Auto-React</h4>
+        <input type="text" id="reactEmoji" placeholder="Emoji (ex: 😂)">
+        <button onclick="toggleReact()" id="reactBtn" class="start">Start Auto-React</button>
+        
+        <h4>Chatlog</h4>
+        <input type="text" id="chatlogChannel" placeholder="Channel ID pentru monitorizare">
+        <button onclick="toggleChatlog()" id="chatlogBtn" class="start">Start Chatlog</button>
+    </div>
+    
+    <div class="card">
+        <h3>Log</h3>
+        <div class="log" id="logContainer"></div>
+    </div>
+</div>
+
+<script>
+let ws = null;
+let isLoggedIn = false;
+let currentToken = '';
+
+function addLog(message, type = 'info') {
+    const logContainer = document.getElementById('logContainer');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    
+    const timestamp = new Date().toLocaleTimeString();
+    entry.innerHTML = `<span class="${type}">[${timestamp}] ${message}</span>`;
+    
+    logContainer.appendChild(entry);
+    logContainer.scrollTop = logContainer.scrollHeight;
+}
+
+function connect() {
+    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+    const wsUrl = `${protocol}${window.location.host}`;
+    
+    ws = new WebSocket(wsUrl);
+    
+    ws.onopen = () => {
+        addLog('Conectat la server', 'success-text');
+    };
+    
+    ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        handleServerMessage(data);
+    };
+    
+    ws.onclose = () => {
+        addLog('Deconectat de la server', 'error-text');
+        if (isLoggedIn) {
+            setTimeout(connect, 3000);
+        }
+    };
+    
+    ws.onerror = (error) => {
+        addLog('Eroare WebSocket', 'error-text');
+    };
+}
+
+function handleServerMessage(data) {
+    switch(data.type) {
+        case 'login_success':
+            isLoggedIn = true;
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('controlCard').style.display = 'block';
+            document.getElementById('usernameDisplay').textContent = data.user.username;
+            document.getElementById('connectionStatus').className = 'status online';
+            addLog(`Logat ca ${data.user.username}`, 'success-text');
+            break;
+            
+        case 'login_error':
+            addLog(`Eroare login: ${data.message}`, 'error-text');
+            break;
+            
+        case 'heartbeat':
+            if (data.status === 'ok') {
+                document.getElementById('connectionStatus').className = 'status online';
+            } else {
+                document.getElementById('connectionStatus').className = 'status working';
+            }
+            break;
+            
+        case 'heartbeat_started':
+            addLog('Heartbeat pornit', 'success-text');
+            document.getElementById('heartbeatBtn').textContent = 'Stop Heartbeat';
+            document.getElementById('heartbeatBtn').className = 'stop';
+            break;
+            
+        case 'message_sent':
+            if (data.success) {
+                addLog('Mesaj trimis cu succes', 'success-text');
+            } else {
+                addLog('Eroare la trimiterea mesajului', 'error-text');
+            }
+            break;
+            
+        case 'afk_started':
+            addLog('Anti-AFK pornit', 'success-text');
+            document.getElementById('afkBtn').textContent = 'Stop Anti-AFK';
+            document.getElementById('afkBtn').className = 'stop';
+            break;
+            
+        case 'afk_response':
+            addLog(`AFK: ${data.message}`, 'info');
+            break;
+            
+        case 'react_started':
+            addLog('Auto-React pornit', 'success-text');
+            document.getElementById('reactBtn').textContent = 'Stop Auto-React';
+            document.getElementById('reactBtn').className = 'stop';
+            break;
+            
+        case 'reaction_added':
+            addLog(`Reacție adăugată: ${data.emoji}`, 'info');
+            break;
+            
+        case 'chatlog_started':
+            addLog('Chatlog pornit', 'success-text');
+            document.getElementById('chatlogBtn').textContent = 'Stop Chatlog';
+            document.getElementById('chatlogBtn').className = 'stop';
+            break;
+            
+        case 'chat_message':
+            addLog(`${data.message.author.username}: ${data.message.content}`, 'info');
+            break;
+            
+        case 'session_expired':
+            addLog('Sesiune expirată', 'error-text');
+            logout();
+            break;
+            
+        case 'logged_out':
+            isLoggedIn = false;
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('controlCard').style.display = 'none';
+            addLog('Deconectat', 'info');
+            break;
+            
+        case 'error':
+            addLog(`Eroare: ${data.message}`, 'error-text');
+            break;
+    }
+}
+
+function login() {
+    const token = document.getElementById('tokenInput').value.trim();
+    
+    if (!token) {
+        addLog('Introdu token-ul', 'error-text');
+        return;
+    }
+    
+    currentToken = token;
+    
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'login',
+            token: token
+        }));
+    } else {
+        connect();
+        setTimeout(() => {
+            ws.send(JSON.stringify({
+                type: 'login',
+                token: token
+            }));
+        }, 1000);
+    }
+}
+
+function logout() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'logout' }));
+    }
+    
+    isLoggedIn = false;
+    currentToken = '';
+    document.getElementById('tokenInput').value = '';
+    document.getElementById('loginCard').style.display = 'block';
+    document.getElementById('controlCard').style.display = 'none';
+}
+
+function sendMessage() {
+    const channelId = document.getElementById('channelInput').value.trim();
+    const content = document.getElementById('messageInput').value.trim();
+    
+    if (!channelId || !content) {
+        addLog('Completează channel ID și mesaj', 'error-text');
+        return;
+    }
+    
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            type: 'send_message',
+            channelId: channelId,
+            content: content
+        }));
+        
+        document.getElementById('messageInput').value = '';
+    }
+}
+
+function toggleHeartbeat() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const btn = document.getElementById('heartbeatBtn');
+        
+        if (btn.textContent.includes('Start')) {
+            ws.send(JSON.stringify({ type: 'start_heartbeat' }));
+        } else {
+            ws.send(JSON.stringify({ type: 'stop_heartbeat' }));
+            btn.textContent = 'Start Heartbeat';
+            btn.className = 'start';
+            addLog('Heartbeat oprit', 'info');
+        }
+    }
+}
+
+function toggleAfk() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const btn = document.getElementById('afkBtn');
+        
+        if (btn.textContent.includes('Start')) {
+            const channelId = document.getElementById('afkChannel').value.trim();
+            const responseText = document.getElementById('afkResponse').value.trim();
+            
+            if (!channelId) {
+                addLog('Introdu channel ID pentru AFK', 'error-text');
+                return;
+            }
+            
+            ws.send(JSON.stringify({
+                type: 'start_afk',
+                channelId: channelId,
+                responseText: responseText || 'here',
+                delay: 1000,
+                typing: true
+            }));
+        } else {
+            ws.send(JSON.stringify({ type: 'stop_afk' }));
+            btn.textContent = 'Start Anti-AFK';
+            btn.className = 'start';
+            addLog('Anti-AFK oprit', 'info');
+        }
+    }
+}
+
+function toggleReact() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const btn = document.getElementById('reactBtn');
+        
+        if (btn.textContent.includes('Start')) {
+            const emoji = document.getElementById('reactEmoji').value.trim();
+            
+            if (!emoji) {
+                addLog('Introdu emoji', 'error-text');
+                return;
+            }
+            
+            ws.send(JSON.stringify({
+                type: 'start_react',
+                emoji: emoji,
+                channels: []
+            }));
+        } else {
+            ws.send(JSON.stringify({ type: 'stop_react' }));
+            btn.textContent = 'Start Auto-React';
+            btn.className = 'start';
+            addLog('Auto-React oprit', 'info');
+        }
+    }
+}
+
+function toggleChatlog() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        const btn = document.getElementById('chatlogBtn');
+        
+        if (btn.textContent.includes('Start')) {
+            const channelId = document.getElementById('chatlogChannel').value.trim();
+            
+            if (!channelId) {
+                addLog('Introdu channel ID pentru chatlog', 'error-text');
+                return;
+            }
+            
+            ws.send(JSON.stringify({
+                type: 'start_chatlog',
+                channelId: channelId
+            }));
+        } else {
+            ws.send(JSON.stringify({ type: 'stop_chatlog' }));
+            btn.textContent = 'Start Chatlog';
+            btn.className = 'start';
+            addLog('Chatlog oprit', 'info');
+        }
+    }
+}
+
+// Conectare inițială
+connect();
+</script>
+</body>
+</html>
