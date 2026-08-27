@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Joyce Cord - 24/7</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e0e0e0;font-family:'Segoe UI',sans-serif;min-height:100vh;padding:20px}
+.container{max-width:600px;margin:0 auto}
+.card{background:#151520;border:1px solid #2a2a3a;border-radius:12px;padding:20px;margin-bottom:15px}
+h1{color:#c0392b;text-align:center;margin-bottom:20px;font-size:28px}
+input,textarea{width:100%;padding:12px;background:#1a1a2a;border:1px solid #2a2a3a;border-radius:8px;color:#fff;margin-bottom:10px;font-size:14px}
+button{width:100%;padding:12px;background:#c0392b;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:bold;margin-bottom:10px;transition:all 0.3s}
+button:hover{background:#a93226}
+button:disabled{opacity:0.5;cursor:not-allowed}
+button.stop{background:#e74c3c}
+button.success{background:#27ae60}
+.status{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px}
+.status.online{background:#27ae60}
+.status.offline{background:#e74c3c}
+.status.working{background:#f39c12;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.log{background:#0a0a0f;border:1px solid #2a2a3a;border-radius:8px;padding:10px;height:300px;overflow-y:auto;font-size:12px;font-family:monospace}
+.log-entry{margin-bottom:5px;padding:5px;border-left:3px solid #c0392b;background:#1a1a2a}
+.info{color:#4a90d9}
+.success-text{color:#27ae60}
+.error-text{color:#e74c3c}
+.flex{display:flex;gap:10px;align-items:center}
+.flex-1{flex:1}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>🔴 JOYCE CORD 24/7</h1>
+    
+    <!-- Login -->
+    <div class="card" id="loginCard">
+        <h3>Login</h3>
+        <input type="password" id="tokenInput" placeholder="Discord Token">
+        <button onclick="login()">Conectează-te</button>
+    </div>
+    
+    <!-- Control Panel -->
+    <div class="card" id="controlCard" style="display:none">
+        <div class="flex" style="margin-bottom:15px">
+            <span class="status" id="connectionStatus"></span>
+            <span id="usernameDisplay" class="flex-1">Conectat</span>
+            <button onclick="logout()" style="width:auto;padding:8px 15px;margin:0">Logout</button>
+        </div>
+        
+        <!-- Send Message -->
+        <h3>Trimite Mesaj</h3>
+        <input type="text" id="channelInput" placeholder="Channel ID">
+        <textarea id="messageInput" placeholder="Mesajul tău..." rows="3"></textarea>
+        <button onclick="sendMessage()">Trimite</button>
+        
+        <!-- Features -->
+        <h3>Funcții 24/7</h3>
+        <button onclick="toggleHeartbeat()" id="heartbeatBtn" class="success">Start Heartbeat</button>
+        <button onclick="toggleAfk()" id="afkBtn" class="success">Start Anti-AFK</button>
+        <button onclick="toggleReact()" id="reactBtn" class="success">Start Auto-React</button>
+        <button onclick="toggleChatlog()" id="chatlogBtn" class="success">Start Chatlog</button>
+    </div>
+    
+    <!-- Log -->
+    <div class="card">
+        <h3>Log
