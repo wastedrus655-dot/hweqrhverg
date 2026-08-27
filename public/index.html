@@ -196,6 +196,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
     </div>
 
     <div class="main-content">
+      
       <!-- MAIN TAB -->
       <div class="tab-content active" id="tab-main">
         <div class="card">
@@ -447,31 +448,17 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         </div>
       </div>
 
-      <!-- RPC TAB -->
+      <!-- STATUS ONLINE TAB -->
       <div class="tab-content" id="tab-rpc">
         <div class="card">
-          <div class="card-title"><span class="icon">🎮</span> Rich Presence</div>
-          <div class="rpc-presets" style="margin-bottom:15px">
-            <span class="rpc-preset" onclick="loadRpcPreset('crunchyroll')">Crunchyroll</span>
-            <span class="rpc-preset" onclick="loadRpcPreset('spotify')">Spotify</span>
-            <span class="rpc-preset" onclick="loadRpcPreset('youtube')">YouTube</span>
-            <span class="rpc-preset" onclick="loadRpcPreset('vscode')">VS Code</span>
-          </div>
-          <div class="form-group">
-            <label class="form-label">App Name</label>
-            <input type="text" class="form-control" id="rpcName" value="Crunchyroll">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Details</label>
-            <input type="text" class="form-control" id="rpcDetails" value="Watching Anime">
-          </div>
-          <div class="form-group">
-            <label class="form-label">State</label>
-            <input type="text" class="form-control" id="rpcState" value="Episode 4 of 12">
-          </div>
-          <div class="btn-group">
-            <button class="btn btn-success" id="startRpc" onclick="startRpc()">Apply</button>
-            <button class="btn btn-danger" id="stopRpc" onclick="stopRpc()" disabled>Clear</button>
+          <div class="card-title"><span class="icon">🟢</span> Status Online</div>
+          <div style="text-align:center;padding:20px">
+            <div style="font-size:48px;margin-bottom:15px">🟢</div>
+            <p style="color:var(--text-dim);margin-bottom:20px">Menține statusul ONLINE pe Discord 24/7</p>
+            <div class="btn-group">
+              <button class="btn btn-success" id="startOnline" onclick="startOnlineStatus()">Activează Online</button>
+              <button class="btn btn-danger" id="stopOnline" onclick="stopOnlineStatus()" disabled>Dezactivează</button>
+            </div>
           </div>
           <div class="toggle-row" style="margin-top:15px;border:none">
             <div><div class="toggle-label">Status</div></div>
@@ -532,8 +519,8 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
         <span>Chat</span>
       </button>
       <button class="nav-btn" data-tab="rpc" onclick="showTab('rpc')">
-        <span class="icon">🎮</span>
-        <span>RPC</span>
+        <span class="icon">🟢</span>
+        <span>Online</span>
       </button>
       <button class="nav-btn" data-tab="settings" onclick="showTab('settings')">
         <span class="icon">⚙️</span>
@@ -545,7 +532,9 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 </div>
 
 <script>
-// Conectare WebSocket la server
+// ══════════════════════════════════════════════════════
+//  WEBSOCKET CONNECTION
+// ══════════════════════════════════════════════════════
 let ws = null;
 let currentUserId = null;
 let selectedToken = '';
@@ -559,9 +548,6 @@ let pasteTimer = null;
 let cdTimer = null;
 let cdCancelled = false;
 
-// ══════════════════════════════════════════════════════
-//  WEBSOCKET CONNECTION
-// ══════════════════════════════════════════════════════
 function connectWebSocket() {
     const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
     const wsUrl = `${protocol}${window.location.host}`;
@@ -575,28 +561,141 @@ function connectWebSocket() {
     
     ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        
-        if (data.type === 'login_success') {
-            // Login reușit prin WebSocket
-            currentUserId = data.user.id;
-            selectedToken = localStorage.getItem('joyce_token');
-            launchApp(data.user, localStorage.getItem('joyce_name') || data.user.username);
-        } else if (data.type === 'session_expired') {
-            notify('Session expired', 'danger');
-            logout();
-        }
+        handleServerMessage(data);
     };
     
     ws.onclose = () => {
         console.log('❌ WebSocket deconectat');
         setStatus('st-connection', 'Disconnected', 's-off');
-        // Reîncearcă conectarea după 3 secunde
         setTimeout(connectWebSocket, 3000);
     };
     
     ws.onerror = (error) => {
         console.error('WebSocket error:', error);
     };
+}
+
+function handleServerMessage(data) {
+    switch(data.type) {
+        case 'login_success':
+            currentUserId = data.user.id;
+            selectedToken = localStorage.getItem('joyce_token');
+            launchApp(data.user, localStorage.getItem('joyce_name') || data.user.username);
+            break;
+            
+        case 'login_error':
+            notify(data.message, 'danger');
+            break;
+            
+        case 'heartbeat':
+            if (data.status === 'ok') {
+                setStatus('st-connection', 'Connected', 's-on');
+            }
+            break;
+            
+        case 'heartbeat_started':
+            console.log('Heartbeat pornit');
+            break;
+            
+        case 'message_sent':
+            if (data.success) {
+                notify('Message sent!', 'success');
+            } else {
+                notify('Failed to send message', 'danger');
+            }
+            break;
+            
+        case 'afk_started':
+            notify('Anti-AFK started', 'success');
+            break;
+            
+        case 'afk_response':
+            notify(`AFK: ${data.message}`, 'info');
+            break;
+            
+        case 'react_started':
+            setStatus('st-react', 'Active', 's-warn');
+            notify('Auto-react started', 'success');
+            break;
+            
+        case 'reaction_added':
+            console.log(`Reaction added: ${data.emoji}`);
+            break;
+            
+        case 'chatlog_started':
+            setStatus('chatlog-status', 'Live', 's-on');
+            notify('Chatlog connected', 'success');
+            break;
+            
+        case 'chat_message':
+            appendChat(data.message);
+            break;
+            
+        case 'beef_started':
+            setStatus('st-beefer', 'Running', 's-warn');
+            notify('Beefer started', 'success');
+            break;
+            
+        case 'beef_sent':
+            console.log(`Beef sent: ${data.message}`);
+            break;
+            
+        case 'paste_started':
+            notify('Auto-paste started', 'success');
+            break;
+            
+        case 'paste_sent':
+            console.log(`Paste sent: ${data.message}`);
+            break;
+            
+        case 'paste_stopped':
+            notify('Auto-paste stopped', 'warning');
+            break;
+            
+        case 'countdown_tick':
+            $$('cdNumber').textContent = data.number;
+            break;
+            
+        case 'countdown_complete':
+            notify('Countdown complete!', 'success');
+            $$('startCD').disabled = false;
+            $$('stopCD').disabled = true;
+            break;
+            
+        case 'online_status_started':
+            setStatus('rpcStatus2', 'Online', 's-on');
+            $$('startOnline').disabled = true;
+            $$('stopOnline').disabled = false;
+            notify('Status ONLINE activat!', 'success');
+            break;
+            
+        case 'online_status_stopped':
+            setStatus('rpcStatus2', 'Inactive', 's-off');
+            $$('startOnline').disabled = false;
+            $$('stopOnline').disabled = true;
+            notify('Status ONLINE dezactivat', 'info');
+            break;
+            
+        case 'online_status_error':
+            setStatus('rpcStatus2', 'Error', 's-off');
+            $$('startOnline').disabled = false;
+            $$('stopOnline').disabled = true;
+            notify('Eroare: ' + data.message, 'danger');
+            break;
+            
+        case 'session_expired':
+            notify('Session expired', 'danger');
+            logout();
+            break;
+            
+        case 'logged_out':
+            console.log('Logged out');
+            break;
+            
+        case 'error':
+            notify(data.message, 'danger');
+            break;
+    }
 }
 
 // ══════════════════════════════════════════════════════
@@ -682,17 +781,12 @@ async function attemptLogin() {
   currentUserId=user.id; selectedToken=token;
   const name=pname||user.username;
   
-  // Salvează token-ul
   localStorage.setItem('joyce_token', token);
   localStorage.setItem('joyce_name', name);
   localStorage.setItem('joyce_user', JSON.stringify(user));
   
-  // Trimite login la server prin WebSocket
   if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: 'login',
-      token: token
-    }));
+    ws.send(JSON.stringify({ type: 'login', token: token }));
   }
   
   const ps=getProfiles();
@@ -759,7 +853,7 @@ async function sendMessage(content, channel, opts={}) {
 }
 
 // ══════════════════════════════════════════════════════
-//  MAIN TAB FUNCTIONS
+//  MAIN TAB
 // ══════════════════════════════════════════════════════
 function handleNormalMessage() {
   const msg=$$('message')?.value, chan=$$('channelId')?.value?.trim();
@@ -882,6 +976,37 @@ function stopBeef() {
 }
 
 // ══════════════════════════════════════════════════════
+//  ANTI-AFK
+// ══════════════════════════════════════════════════════
+async function toggleAfk(enabled) {
+  if(!enabled){ 
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'stop_afk' }));
+    }
+    return; 
+  }
+  
+  const mode=$$('afkMode')?.value;
+  const channel=mode==='dedicated'&&$$('afkDedicated')?.value?.trim()
+    ? $$('afkDedicated').value.trim()
+    : globalChannelId||$$('channelId')?.value?.trim();
+    
+  if(!channel){ notify('Set channel ID','warning'); $$('afkEnabled').checked=false; return; }
+  
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'start_afk',
+      channelId: channel,
+      responseText: $$('afkNormalResponse')?.value?.trim() || 'here',
+      delay: parseFloat($$('afkDelay')?.value || 0.8) * 1000,
+      typing: $$('afkTyping')?.checked,
+      checkWords: ['afk', 'check', 'say', 'type', 'here']
+    }));
+    notify('AFK monitor active','success');
+  }
+}
+
+// ══════════════════════════════════════════════════════
 //  COUNTDOWN
 // ══════════════════════════════════════════════════════
 async function startCD() {
@@ -976,13 +1101,13 @@ function stopPaste() {
 }
 
 // ══════════════════════════════════════════════════════
-//  AUTO REACT (folosește polling HTTP)
+//  AUTO REACT
 // ══════════════════════════════════════════════════════
-let reactPolling = null;
-
 async function toggleReact(enabled) {
   if(!enabled){ 
-    if(reactPolling){ clearInterval(reactPolling); reactPolling=null; }
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'stop_react' }));
+    }
     setStatus('st-react','Off','s-off'); 
     return; 
   }
@@ -990,92 +1115,40 @@ async function toggleReact(enabled) {
   const emoji=$$('reactEmoji')?.value?.trim();
   if(!emoji){ notify('Enter emoji','warning'); $$('reactEnabled').checked=false; return; }
   
-  let lastCheck = Date.now();
-  
-  reactPolling = setInterval(async () => {
-    try {
-      const response = await fetch('https://discord.com/api/v10/users/@me/channels', {
-        headers: { 'Authorization': selectedToken }
-      });
-      
-      if (!response.ok) return;
-      
-      const channels = await response.json();
-      
-      for (const channel of channels.slice(0, 5)) {
-        const msgResponse = await fetch(`https://discord.com/api/v10/channels/${channel.id}/messages?limit=3`, {
-          headers: { 'Authorization': selectedToken }
-        });
-        
-        if (!msgResponse.ok) continue;
-        
-        const messages = await msgResponse.json();
-        
-        for (const msg of messages) {
-          const msgTime = new Date(msg.timestamp).getTime();
-          
-          if (msgTime > lastCheck && msg.author?.id === currentUserId) {
-            const enc = encodeURIComponent(emoji);
-            await fetch(`https://discord.com/api/v10/channels/${msg.channel_id}/messages/${msg.id}/reactions/${enc}/@me`, {
-              method: 'PUT',
-              headers: { 'Authorization': selectedToken }
-            }).catch(()=>{});
-          }
-        }
-      }
-      
-      lastCheck = Date.now();
-    } catch(e) {
-      console.error('React error:', e);
-    }
-  }, 5000);
-  
-  setStatus('st-react','Active','s-warn');
-  notify('Auto-react active','success');
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'start_react',
+      emoji: emoji,
+      channels: []
+    }));
+    setStatus('st-react','Active','s-warn');
+    notify('Auto-react active','success');
+  }
 }
 
 // ══════════════════════════════════════════════════════
-//  CHATLOG (folosește polling HTTP)
+//  CHATLOG
 // ══════════════════════════════════════════════════════
-let chatlogPolling = null;
-
 async function startChatlog() {
   const channel=$$('chatlogChannel')?.value?.trim();
   if(!channel){ notify('Enter channel ID','warning'); return; }
   
-  let lastCheck = Date.now();
-  setStatus('chatlog-status','Live','s-on');
-  $$('stopChatlogBtn').disabled=false;
-  
-  chatlogPolling = setInterval(async () => {
-    try {
-      const response = await fetch(`https://discord.com/api/v10/channels/${channel}/messages?limit=10`, {
-        headers: { 'Authorization': selectedToken }
-      });
-      
-      if (!response.ok) return;
-      
-      const messages = await response.json();
-      
-      for (const msg of messages.reverse()) {
-        const msgTime = new Date(msg.timestamp).getTime();
-        
-        if (msgTime > lastCheck) {
-          appendChat(msg);
-        }
-      }
-      
-      lastCheck = Date.now();
-    } catch(e) {
-      console.error('Chatlog error:', e);
-    }
-  }, 3000);
-  
-  notify('Chatlog connected','success');
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'start_chatlog',
+      channelId: channel
+    }));
+    
+    setStatus('chatlog-status','Live','s-on');
+    $$('stopChatlogBtn').disabled=false;
+    notify('Chatlog connected','success');
+  }
 }
 
 function stopChatlog() {
-  if(chatlogPolling){ clearInterval(chatlogPolling); chatlogPolling=null; }
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'stop_chatlog' }));
+  }
   setStatus('chatlog-status','Offline','s-off');
   $$('stopChatlogBtn').disabled=true;
 }
@@ -1109,34 +1182,27 @@ function clearChatlog() {
 }
 
 // ══════════════════════════════════════════════════════
-//  RPC (SIMULAT)
+//  STATUS ONLINE
 // ══════════════════════════════════════════════════════
-const RPC_PRESETS={
-  crunchyroll:{name:'Crunchyroll',details:'Watching Anime',state:'Episode 4 of 12'},
-  spotify:{name:'Spotify',details:'Listening to Music',state:'Daily Mix 1'},
-  youtube:{name:'YouTube',details:'Watching Videos',state:'Recommended'},
-  vscode:{name:'VS Code',details:'Editing code',state:'Workspace'}
-};
-
-function loadRpcPreset(p) {
-  const d=RPC_PRESETS[p];
-  if(!d) return;
-  $$('rpcName').value=d.name;
-  $$('rpcDetails').value=d.details;
-  $$('rpcState').value=d.state;
+function startOnlineStatus() {
+  if (!selectedToken) {
+    notify('Not logged in', 'danger');
+    return;
+  }
+  
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'start_online' }));
+    setStatus('rpcStatus2', 'Starting...', 's-warn');
+  } else {
+    notify('WebSocket not connected', 'danger');
+  }
 }
 
-function startRpc() {
-  setStatus('rpcStatus2','Active','s-on');
-  $$('startRpc').disabled=true;
-  $$('stopRpc').disabled=false;
-  notify('RPC applied','success');
-}
-
-function stopRpc() {
-  setStatus('rpcStatus2','Inactive','s-off');
-  $$('startRpc').disabled=false;
-  $$('stopRpc').disabled=true;
+function stopOnlineStatus() {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'stop_online' }));
+    setStatus('rpcStatus2', 'Stopping...', 's-warn');
+  }
 }
 
 // ══════════════════════════════════════════════════════
@@ -1180,7 +1246,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   renderLoginProfiles();
   connectWebSocket();
   
-  // Auto-login dacă token-ul există
   const savedToken = localStorage.getItem('joyce_token');
   const savedName = localStorage.getItem('joyce_name');
   const savedUser = localStorage.getItem('joyce_user');
@@ -1192,7 +1257,6 @@ document.addEventListener('DOMContentLoaded',()=>{
       currentUserId = user.id;
       launchApp(user, savedName);
       
-      // Trimite login la server
       setTimeout(() => {
         if (ws && ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ type: 'login', token: savedToken }));
@@ -1203,7 +1267,6 @@ document.addEventListener('DOMContentLoaded',()=>{
     }
   }
   
-  // Setup enter key for message
   $$('message')?.addEventListener('keydown',e=>{
     if(e.key==='Enter'&&!e.shiftKey){
       e.preventDefault();
