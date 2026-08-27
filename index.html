@@ -195,7 +195,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 <div id="notifArea"></div>
 
 <!-- LOGIN SCREEN -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none">
   <div class="login-box">
     <div class="login-logo">
       <div class="brand"><span>JOYCE</span> CORD</div>
@@ -220,7 +220,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 </div>
 
 <!-- APP SCREEN -->
-<div id="appScreen">
+<div id="appScreen" style="display:none">
   <div class="container">
     <!-- HEADER -->
     <div class="header">
@@ -723,6 +723,9 @@ async function attemptLogin() {
   currentUserId=user.id; selectedToken=token;
   const name=pname||user.username;
   
+  // Salvează sesiunea
+  saveSession(user, name, token);
+  
   const ps=getProfiles();
   const ex=ps.findIndex(p=>p.token===token);
   if(ex===-1) ps.push({name,token,userId:user.id,username:user.username});
@@ -730,6 +733,46 @@ async function attemptLogin() {
   saveProfiles(ps);
   
   launchApp(user,name);
+}
+
+// ══════════════════════════════════════════════════════
+//  SESSION MANAGEMENT (AUTO-LOGIN)
+// ══════════════════════════════════════════════════════
+
+// Salvează sesiunea
+function saveSession(user, name, token) {
+  localStorage.setItem('joyce_token', token);
+  localStorage.setItem('joyce_name', name);
+  localStorage.setItem('joyce_user', JSON.stringify(user));
+  localStorage.setItem('joyce_session_active', 'true');
+}
+
+// Încearcă auto-login
+function tryAutoLogin() {
+  const token = localStorage.getItem('joyce_token');
+  const name = localStorage.getItem('joyce_name');
+  const userStr = localStorage.getItem('joyce_user');
+  
+  if (token && userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      selectedToken = token;
+      currentUserId = user.id;
+      launchApp(user, name);
+      return true;
+    } catch(e) {
+      return false;
+    }
+  }
+  return false;
+}
+
+// Șterge sesiunea
+function clearSession() {
+  localStorage.removeItem('joyce_token');
+  localStorage.removeItem('joyce_name');
+  localStorage.removeItem('joyce_user');
+  localStorage.removeItem('joyce_session_active');
 }
 
 function launchApp(user,name) {
@@ -748,7 +791,7 @@ function launchApp(user,name) {
 }
 
 function logout() {
-  localStorage.removeItem('joyce_cur');
+  clearSession();
   selectedToken=''; currentUserId=null;
   location.reload();
 }
@@ -1314,6 +1357,11 @@ function toggleTokenDisplay(show) {
 // ══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
   renderLoginProfiles();
+  
+  // Încearcă auto-login
+  if (!tryAutoLogin()) {
+    $$('loginScreen').style.display = 'flex';
+  }
   
   // Setup enter key for message
   $$('message')?.addEventListener('keydown',e=>{
