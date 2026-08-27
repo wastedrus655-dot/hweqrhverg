@@ -18,12 +18,8 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;min-height:100vh;padding:0;position:relative;overflow-x:hidden}
-
-/* Mobile-first responsive */
 #particleCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
 .glow-bg{position:fixed;width:150vw;height:150vh;background:radial-gradient(circle at 50% 50%,var(--theme-glow) 0%,transparent 60%);z-index:0;pointer-events:none}
-
-/* LOGIN */
 #loginScreen{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:100;background:var(--bg);padding:15px}
 .login-box{background:var(--bg-light);border:1px solid var(--border);border-radius:16px;padding:30px 20px;width:100%;max-width:400px;position:relative;z-index:1;box-shadow:0 40px 100px rgba(0,0,0,0.8)}
 .login-logo{text-align:center;margin-bottom:24px}
@@ -46,12 +42,8 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .btn-login{width:100%;padding:14px;background:var(--primary);color:white;border:none;border-radius:var(--radius);font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:600;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:var(--tr);margin-top:8px}
 .btn-login:hover{background:var(--primary-dark);transform:translateY(-1px)}
 .login-error{background:rgba(237,66,69,0.12);border:1px solid rgba(237,66,69,0.3);border-radius:var(--radius);padding:12px 15px;font-size:14px;color:#ED4245;margin-top:14px;display:none;text-align:center}
-
-/* APP */
 #appScreen{display:none;position:relative;z-index:1;width:100%;min-height:100vh;padding-bottom:80px}
 .container{background:var(--bg-light);width:100%;min-height:100vh;display:flex;flex-direction:column}
-
-/* HEADER */
 .header{background:var(--header-bg);padding:12px 15px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:10}
 .header::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--primary),transparent);opacity:0.4}
 .logo-text{font-size:16px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
@@ -61,34 +53,24 @@ body{background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;mi
 .profile-badge .av{width:20px;height:20px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:700}
 .btn-logout{background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:4px 10px;border-radius:20px;font-size:12px;cursor:pointer;transition:var(--tr);font-family:'Rajdhani',sans-serif}
 .btn-logout:hover{border-color:var(--danger);color:var(--danger)}
-
-/* BOTTOM NAV */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--nav-bg);border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:100;overflow-x:auto;gap:4px}
 .bottom-nav::-webkit-scrollbar{display:none}
 .nav-btn{flex:1;min-width:60px;max-width:80px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;background:transparent;border:none;color:var(--text-dim);font-size:10px;cursor:pointer;transition:var(--tr);font-family:'Rajdhani',sans-serif;border-radius:8px}
 .nav-btn.active{background:rgba(192,57,43,0.15);color:var(--primary)}
 .nav-btn .icon{font-size:18px}
-
-/* CONTENT */
 .main-content{flex:1;padding:15px;padding-bottom:100px;overflow-y:auto}
 .tab-content{display:none;animation:fadeIn 0.22s ease}
 .tab-content.active{display:block}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
-
-/* CARDS */
 .card{background:var(--bg-card);border-radius:var(--radius);padding:16px;margin-bottom:12px;border:1px solid var(--border)}
 .card-title{font-size:13px;font-weight:700;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--text);letter-spacing:0.8px;text-transform:uppercase}
 .card-title .icon{color:var(--primary);font-size:15px}
-
-/* FORMS */
 .form-group{margin-bottom:16px}
 .form-label{display:block;margin-bottom:6px;font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px}
 .form-control{width:100%;padding:12px 14px;background:var(--bg-lighter);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:14px;transition:var(--tr);font-family:'Rajdhani',sans-serif}
 .form-control:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 2px rgba(161,29,29,0.15)}
 textarea.form-control{min-height:80px;resize:vertical;font-size:14px}
 select.form-control{cursor:pointer}
-
-/* BUTTONS */
 .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:var(--tr);border:none;gap:6px;font-family:'Rajdhani',sans-serif;letter-spacing:0.5px;text-transform:uppercase;width:100%;margin-bottom:8px}
 .btn:disabled{opacity:0.35;cursor:not-allowed;transform:none!important}
 .btn:not(:disabled):active{transform:scale(0.97)}
@@ -102,22 +84,16 @@ select.form-control{cursor:pointer}
 .btn-outline:not(:disabled):hover{background:var(--bg-lighter);border-color:var(--text-dim)}
 .btn-group{display:flex;gap:8px;flex-wrap:wrap}
 .btn-group .btn{flex:1;min-width:120px;margin-bottom:0}
-
-/* STATUS */
 .status{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:4px 10px;border-radius:8px;background:rgba(255,255,255,0.04)}
 .status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .s-on{background:var(--success)}
 .s-off{background:var(--danger)}
 .s-warn{background:var(--warning);animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
-
-/* SLIDERS */
 .slider-label{display:flex;justify-content:space-between;margin-bottom:5px;font-size:12px;color:var(--text-dim)}
 input[type="range"]{-webkit-appearance:none;width:100%;height:5px;background:#111;border-radius:3px;outline:none;margin-bottom:10px}
 input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--primary);cursor:pointer;border:2px solid rgba(255,255,255,0.15);transition:var(--tr)}
 input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
-
-/* TOGGLES */
 .toggle{position:relative;display:inline-block;width:42px;height:23px;flex-shrink:0}
 .toggle input{opacity:0;width:0;height:0}
 .toggle-slider{position:absolute;cursor:pointer;inset:0;background:#2a2a2a;border-radius:23px;transition:.28s;border:1px solid var(--border)}
@@ -128,20 +104,14 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .toggle-row:last-child{border-bottom:none}
 .toggle-label{font-size:14px}
 .toggle-desc{font-size:11px;color:var(--text-dim);margin-top:2px}
-
-/* QUEUE */
 .queue-list{max-height:200px;overflow-y:auto;background:var(--bg-lighter);border-radius:var(--radius);padding:8px;border:1px solid var(--border)}
 .queue-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:6px;font-size:13px;background:rgba(255,255,255,0.03);margin-bottom:4px;gap:8px}
 .queue-item:last-child{margin-bottom:0}
 .queue-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-
-/* FORMAT PILLS */
 .format-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .fmt-pill{padding:6px 12px;border-radius:16px;background:var(--bg-lighter);border:1px solid var(--border);font-size:11px;cursor:pointer;transition:var(--tr);color:var(--text-dim);font-family:'Space Mono',monospace}
 .fmt-pill:hover{border-color:var(--primary);color:var(--text)}
 .fmt-pill.active{background:rgba(161,29,29,0.2);border-color:var(--primary);color:var(--primary)}
-
-/* CHATLOG */
 .chat-entry{display:flex;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
 .chat-entry:last-child{border-bottom:none}
 .chat-av{width:32px;height:32px;border-radius:50%;background:var(--bg-lighter);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--primary);flex-shrink:0}
@@ -153,8 +123,6 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .chat-msg{font-size:13px;color:var(--text-dim);word-break:break-word;white-space:pre-wrap}
 .chat-entry.pinged{background:rgba(161,29,29,0.07);border-radius:6px;padding:8px;border-bottom:none}
 .chat-entry.pinged .chat-user{color:var(--primary)}
-
-/* COUNTDOWN */
 .countdown-display{text-align:center;padding:20px;border-radius:var(--radius);background:var(--bg-lighter);border:1px solid var(--border);margin-bottom:14px}
 .countdown-number{font-size:48px;font-weight:700;font-family:'Space Mono',monospace;color:var(--primary);line-height:1}
 .countdown-label{font-size:11px;color:var(--text-dim);margin-top:6px;letter-spacing:2px;text-transform:uppercase}
@@ -164,14 +132,10 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .retry-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
 .retry-dot.used{background:var(--warning)}
 .retry-dot.ok{background:var(--success)}
-
-/* RPC */
 .rpc-preview{background:var(--bg-lighter);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
 .rpc-presets{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
 .rpc-preset{padding:6px 10px;background:var(--bg-lighter);border:1px solid var(--border);border-radius:20px;font-size:11px;cursor:pointer;transition:var(--tr);color:var(--text-dim)}
 .rpc-preset:hover{border-color:var(--primary);color:var(--text)}
-
-/* NOTIFICATIONS */
 #notifArea{position:fixed;top:60px;right:10px;left:10px;display:flex;flex-direction:column-reverse;gap:8px;z-index:9999;pointer-events:none;max-width:400px;margin:0 auto}
 .notif{padding:12px 16px;border-radius:var(--radius);font-size:13px;font-weight:500;animation:slideIn .28s ease;box-shadow:0 5px 20px rgba(0,0,0,.5);pointer-events:all}
 .notif-success{background:#1a3d27;border:1px solid #3BA55C;color:#3BA55C}
@@ -179,8 +143,6 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 .notif-warning{background:#3d2e1a;border:1px solid #FAA81A;color:#FAA81A}
 .notif-info{background:#1a2a3d;border:1px solid #4a90d9;color:#4a90d9}
 @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:none}}
-
-/* RESPONSIVE */
 @media(min-width:768px){
   #appScreen{padding-bottom:0}
   .bottom-nav{position:relative;border-top:none;border-bottom:1px solid var(--border);padding:10px 15px;justify-content:flex-start;gap:8px}
@@ -222,7 +184,6 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
 <!-- APP SCREEN -->
 <div id="appScreen" style="display:none">
   <div class="container">
-    <!-- HEADER -->
     <div class="header">
       <div class="logo-text"><span>JOYCE</span> CORD</div>
       <div class="header-right">
@@ -234,9 +195,7 @@ input[type="range"]::-webkit-slider-thumb:hover{transform:scale(1.2)}
       </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="main-content">
-      
       <!-- MAIN TAB -->
       <div class="tab-content active" id="tab-main">
         <div class="card">
@@ -745,25 +704,47 @@ function saveSession(user, name, token) {
   localStorage.setItem('joyce_name', name);
   localStorage.setItem('joyce_user', JSON.stringify(user));
   localStorage.setItem('joyce_session_active', 'true');
+  localStorage.setItem('joyce_logged_in', 'true');
+  console.log('✅ Sesiune salvată!');
 }
 
 // Încearcă auto-login
 function tryAutoLogin() {
+  console.log('🔄 Încerc auto-login...');
+  
   const token = localStorage.getItem('joyce_token');
   const name = localStorage.getItem('joyce_name');
   const userStr = localStorage.getItem('joyce_user');
+  const loggedIn = localStorage.getItem('joyce_logged_in');
   
-  if (token && userStr) {
+  console.log('Token:', token ? '✅ există' : '❌ nu există');
+  console.log('Name:', name || '❌ nu există');
+  console.log('User:', userStr ? '✅ există' : '❌ nu există');
+  console.log('LoggedIn:', loggedIn || '❌ nu există');
+  
+  if (token && userStr && loggedIn === 'true') {
     try {
       const user = JSON.parse(userStr);
       selectedToken = token;
       currentUserId = user.id;
+      console.log('✅ Auto-login reușit pentru:', user.username);
+      
+      // Reactivare RPC automat după 2 secunde
+      setTimeout(() => {
+        console.log('🔄 Reactivare RPC automat...');
+        if ($$('rpcName')?.value) {
+          startRpc();
+        }
+      }, 2000);
+      
       launchApp(user, name);
       return true;
     } catch(e) {
+      console.error('❌ Eroare auto-login:', e);
       return false;
     }
   }
+  console.log('❌ Auto-login eșuat - date lipsă');
   return false;
 }
 
@@ -773,9 +754,12 @@ function clearSession() {
   localStorage.removeItem('joyce_name');
   localStorage.removeItem('joyce_user');
   localStorage.removeItem('joyce_session_active');
+  localStorage.removeItem('joyce_logged_in');
+  console.log('🗑️ Sesiune ștearsă');
 }
 
 function launchApp(user,name) {
+  console.log('🚀 Lansare aplicație pentru:', name);
   $$('loginScreen').style.display='none';
   $$('appScreen').style.display='block';
   $$('profileAvatar').textContent=name[0].toUpperCase();
@@ -788,13 +772,184 @@ function launchApp(user,name) {
   
   const saved=localStorage.getItem('joyce_last_channel');
   if(saved&&$$('channelId')) $$('channelId').value=saved;
+  
+  // Pornește heartbeat după 5 secunde
+  setTimeout(startHeartbeat, 5000);
 }
 
 function logout() {
+  console.log('🚪 Logout...');
+  stopHeartbeat();
   clearSession();
   selectedToken=''; currentUserId=null;
   location.reload();
 }
+
+// ══════════════════════════════════════════════════════
+//  HEARTBEAT - MENȚINE SESIUNEA ACTIVĂ
+// ══════════════════════════════════════════════════════
+
+let heartbeatInterval = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
+
+// Funcția care menține sesiunea activă
+function startHeartbeat() {
+    if (heartbeatInterval) return;
+    
+    console.log('💓 Pornesc heartbeat...');
+    
+    // Trimite un ping la fiecare 2 minute
+    heartbeatInterval = setInterval(() => {
+        // Verifică dacă token-ul există
+        const token = localStorage.getItem('joyce_token');
+        if (!token) {
+            console.log('⚠️ Token lipsă, încerc reconnect...');
+            tryReconnect();
+            return;
+        }
+        
+        // Trimite un request către Discord pentru a menține sesiunea
+        fetch('https://discord.com/api/v10/users/@me', {
+            headers: { 'Authorization': token }
+        })
+        .then(res => {
+            if (res.ok) {
+                console.log(`💓 Heartbeat OK - ${new Date().toLocaleTimeString()}`);
+                reconnectAttempts = 0;
+            } else {
+                console.log('⚠️ Heartbeat failed, status:', res.status);
+                if (res.status === 401) {
+                    // Token invalid, încearcă re-login
+                    tryReconnect();
+                }
+            }
+        })
+        .catch(err => {
+            console.log('❌ Heartbeat error:', err.message);
+        });
+        
+        // Menține RPC-ul activ
+        if (rpcWs && rpcWs.readyState === WebSocket.OPEN) {
+            // RPC deja activ
+        } else if (selectedToken && currentUserId) {
+            // Încearcă să reactiveze RPC
+            console.log('🔄 Reactivare RPC...');
+            startRpc();
+        }
+        
+    }, 120000); // 2 minute
+}
+
+// Încearcă reconectarea
+function tryReconnect() {
+    reconnectAttempts++;
+    console.log(`🔄 Încerc reconectare ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}`);
+    
+    if (reconnectAttempts > MAX_RECONNECT_ATTEMPTS) {
+        console.log('❌ Prea multe încercări, afișez login...');
+        $$('loginScreen').style.display = 'flex';
+        $$('appScreen').style.display = 'none';
+        clearSession();
+        return;
+    }
+    
+    // Încearcă auto-login din nou
+    const token = localStorage.getItem('joyce_token');
+    const userStr = localStorage.getItem('joyce_user');
+    
+    if (token && userStr) {
+        try {
+            const user = JSON.parse(userStr);
+            selectedToken = token;
+            currentUserId = user.id;
+            launchApp(user, localStorage.getItem('joyce_name'));
+            console.log('✅ Reconectare reușită!');
+        } catch(e) {
+            console.log('❌ Reconectare eșuată:', e);
+        }
+    }
+}
+
+// Oprește heartbeat
+function stopHeartbeat() {
+    if (heartbeatInterval) {
+        clearInterval(heartbeatInterval);
+        heartbeatInterval = null;
+        console.log('💔 Heartbeat oprit');
+    }
+}
+
+// ══════════════════════════════════════════════════════
+//  RPC KEEP-ALIVE
+// ══════════════════════════════════════════════════════
+
+let rpcKeepAliveInterval = null;
+
+function startRpcKeepAlive() {
+    if (rpcKeepAliveInterval) return;
+    
+    rpcKeepAliveInterval = setInterval(() => {
+        // Verifică dacă RPC-ul e activ
+        if (rpcWs && rpcWs.readyState === WebSocket.OPEN) {
+            // Trimite un ping către Discord Gateway
+            try {
+                rpcWs.send(JSON.stringify({ op: 11, d: null }));
+                console.log('🎮 RPC heartbeat trimis');
+            } catch(e) {
+                console.log('❌ RPC heartbeat error:', e);
+                // Încearcă să repornească RPC
+                stopRpc();
+                setTimeout(startRpc, 3000);
+            }
+        } else if (selectedToken) {
+            // RPC-ul e mort, repornește-l
+            console.log('🔄 Repornire RPC...');
+            if (rpcWs) {
+                try { rpcWs.close(); } catch(e) {}
+                rpcWs = null;
+            }
+            setTimeout(startRpc, 2000);
+        }
+    }, 30000); // La fiecare 30 de secunde
+}
+
+// ══════════════════════════════════════════════════════
+//  WAKE-UP - CÂND SITE-UL PORNEȘTE
+// ══════════════════════════════════════════════════════
+
+// Rulează când pagina se încarcă
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        // Pagina a devenit vizibilă
+        console.log('👁️ Pagina vizibilă, verific sesiunea...');
+        
+        const token = localStorage.getItem('joyce_token');
+        const userStr = localStorage.getItem('joyce_user');
+        
+        if (token && userStr && !selectedToken) {
+            // Sesiunea e pierdută, încearcă reconectare
+            tryReconnect();
+        }
+        
+        if (selectedToken && (!rpcWs || rpcWs.readyState !== WebSocket.OPEN)) {
+            // RPC-ul e mort, repornește-l
+            console.log('🔄 Repornire RPC la wake-up...');
+            setTimeout(startRpc, 2000);
+        }
+    }
+});
+
+// Rulează și când pagina se reîncarcă
+window.addEventListener('load', () => {
+    console.log('📱 Pagina încărcată, verific sesiunea...');
+    
+    const token = localStorage.getItem('joyce_token');
+    if (token && selectedToken) {
+        // Suntem deja logați, pornește heartbeat
+        setTimeout(startHeartbeat, 3000);
+    }
+});
 
 // ══════════════════════════════════════════════════════
 //  MESSAGING
@@ -1305,6 +1460,8 @@ async function startRpc() {
         $$('startRpc').disabled=true;
         $$('stopRpc').disabled=false;
         notify('RPC applied','success');
+        // Pornește RPC keep-alive
+        setTimeout(startRpcKeepAlive, 5000);
       }
     };
     
@@ -1312,6 +1469,10 @@ async function startRpc() {
 }
 
 function stopRpc() {
+  if (rpcKeepAliveInterval) {
+    clearInterval(rpcKeepAliveInterval);
+    rpcKeepAliveInterval = null;
+  }
   if(rpcWs){rpcWs.close();rpcWs=null;}
   setStatus('rpcStatus2','Inactive','s-off');
   $$('startRpc').disabled=false;
@@ -1356,10 +1517,12 @@ function toggleTokenDisplay(show) {
 //  INIT
 // ══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
+  console.log('📱 Aplicația pornește...');
   renderLoginProfiles();
   
   // Încearcă auto-login
   if (!tryAutoLogin()) {
+    console.log('🔐 Afișez ecranul de login');
     $$('loginScreen').style.display = 'flex';
   }
   
